@@ -1,0 +1,26 @@
+global:
+  scrape_interval:     10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  - job_name: 'prometheus'
+
+    scrape_interval: 5s
+    scrape_timeout: 10s
+
+    target_groups:
+      - targets: ['127.0.0.1:9090']
+        labels:
+          group: 'prometheus'
+
+      - targets: ['127.0.0.1:9091']
+        labels:
+          group: 'pushgateway'
+
+      - targets: ['127.0.0.1:8080']
+        labels:
+          group: 'siryn'
+
+rule_files:
+  - 'prometheus.rules'
+  - '/rules/*.rules'

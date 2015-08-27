@@ -1,0 +1,14 @@
+FROM alpine:latest
+RUN apk -U add go git mercurial make
+RUN mkdir -p /go/bin
+ENV GOPATH /go
+RUN go get -d github.com/prometheus/prometheus/cmd/... && \
+    (cd $GOPATH/src/github.com/prometheus/prometheus && \
+    make GO=/usr/bin/go USER=siryn binary && \
+    cp prometheus $GOPATH/bin/prometheus \
+    )
+RUN go get -d github.com/prometheus/pushgateway && \
+    (cd $GOPATH/src/github.com/prometheus/pushgateway && \
+    make USER=siryn && \
+    cp pushgateway $GOPATH/bin/pushgateway \
+    )
