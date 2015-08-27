@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	gaugeCpuTotalUsage = prometheus.NewGaugeVec(
+	counterCpuTotalUsage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -18,7 +18,7 @@ var (
 			"type",
 		},
 	)
-	gaugeMemoryUsage = prometheus.NewGaugeVec(
+	counterMemoryUsage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -31,7 +31,7 @@ var (
 			"type",
 		},
 	)
-	gaugeMemoryMaxUsage = prometheus.NewGaugeVec(
+	counterMemoryMaxUsage = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -44,7 +44,7 @@ var (
 			"type",
 		},
 	)
-	gaugeMemoryPercent = prometheus.NewGaugeVec(
+	counterMemoryPercent = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -57,7 +57,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkRxBytes = prometheus.NewGaugeVec(
+	counterNetworkRxBytes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -70,7 +70,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkRxPackets = prometheus.NewGaugeVec(
+	counterNetworkRxPackets = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -83,7 +83,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkRxErrors = prometheus.NewGaugeVec(
+	counterNetworkRxErrors = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -96,7 +96,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkRxDropped = prometheus.NewGaugeVec(
+	counterNetworkRxDropped = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -109,7 +109,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkTxBytes = prometheus.NewGaugeVec(
+	counterNetworkTxBytes = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -122,7 +122,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkTxPackets = prometheus.NewGaugeVec(
+	counterNetworkTxPackets = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -135,7 +135,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkTxErrors = prometheus.NewGaugeVec(
+	counterNetworkTxErrors = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -148,7 +148,7 @@ var (
 			"type",
 		},
 	)
-	gaugeNetworkTxDropped = prometheus.NewGaugeVec(
+	counterNetworkTxDropped = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: "siryn",
 			Subsystem: "docker",
@@ -164,17 +164,17 @@ var (
 )
 
 func init() {
-	// register the prometheus gauges
-	prometheus.MustRegister(gaugeCpuTotalUsage)
-	prometheus.MustRegister(gaugeMemoryUsage)
-	prometheus.MustRegister(gaugeMemoryMaxUsage)
-	prometheus.MustRegister(gaugeMemoryPercent)
-	prometheus.MustRegister(gaugeNetworkRxBytes)
-	prometheus.MustRegister(gaugeNetworkRxPackets)
-	prometheus.MustRegister(gaugeNetworkRxErrors)
-	prometheus.MustRegister(gaugeNetworkRxDropped)
-	prometheus.MustRegister(gaugeNetworkTxBytes)
-	prometheus.MustRegister(gaugeNetworkTxPackets)
-	prometheus.MustRegister(gaugeNetworkTxErrors)
-	prometheus.MustRegister(gaugeNetworkTxDropped)
+	// register the prometheus counters
+	prometheus.MustRegister(counterCpuTotalUsage)
+	prometheus.MustRegister(counterMemoryUsage)
+	prometheus.MustRegister(counterMemoryMaxUsage)
+	prometheus.MustRegister(counterMemoryPercent)
+	prometheus.MustRegister(counterNetworkRxBytes)
+	prometheus.MustRegister(counterNetworkRxPackets)
+	prometheus.MustRegister(counterNetworkRxErrors)
+	prometheus.MustRegister(counterNetworkRxDropped)
+	prometheus.MustRegister(counterNetworkTxBytes)
+	prometheus.MustRegister(counterNetworkTxPackets)
+	prometheus.MustRegister(counterNetworkTxErrors)
+	prometheus.MustRegister(counterNetworkTxDropped)
 }

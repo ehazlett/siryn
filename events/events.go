@@ -36,26 +36,36 @@ func NewEventHandler(client *dockerclient.DockerClient, statInterval int) *Event
 // Handle starts container stats monitoring if label matches
 func (h *EventHandler) Handle(e *dockerclient.Event, ec chan error, args ...interface{}) {
 	log.Debug(fmt.Sprintf("event: date=%d type=%s image=%s container=%s", e.Time, e.Status, e.From, e.Id))
-	if e.Status == "start" {
-		// TODO: filter for siryn label
-		// get container info for event
-		c, err := h.client.InspectContainer(e.Id)
-		if err != nil {
-			ec <- err
-			return
+	// get container info for event
+	c, err := h.client.InspectContainer(e.Id)
+	if err != nil {
+		ec <- err
+		return
+	}
+
+	monitor := false
+
+	for k, _ := range c.Config.Labels {
+		if strings.Index(k, "siryn") == 0 {
+			monitor = true
+			break
 		}
+	}
 
-		monitor := false
+	id := e.Id
+	image := c.Config.Image
 
-		for k, _ := range c.Config.Labels {
-			if strings.Index(k, "siryn") == 0 {
-				monitor = true
-				break
+	if monitor {
+		switch e.Status {
+		case "start":
+			log.Debugf("starting stats: id=%s image=%s", id, image)
+			if err := h.startStats(id, image); err != nil {
+				ec <- err
+				return
 			}
-		}
-
-		if monitor {
-			if err := h.startStats(e.Id, c.Config.Image); err != nil {
+		case "kill", "die", "stop", "destroy":
+			log.Debugf("resetting stats: id=%s image=%s", id, image)
+			if err := h.resetStats(id, image); err != nil {
 				ec <- err
 				return
 			}
@@ -96,75 +106,151 @@ func (h *EventHandler) sendContainerStats(id string, stats *dockerclient.Stats, 
 	totalUsage := stats.CpuStats.CpuUsage.TotalUsage
 	memPercent := float64(stats.MemoryStats.Usage) / float64(stats.MemoryStats.Limit) * 100.0
 
-	gaugeCpuTotalUsage.With(prometheus.Labels{
+	counterCpuTotalUsage.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "cpu",
 	}).Set(float64(totalUsage))
 
-	gaugeMemoryUsage.With(prometheus.Labels{
+	counterMemoryUsage.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "memory",
 	}).Set(float64(stats.MemoryStats.Usage))
 
-	gaugeMemoryMaxUsage.With(prometheus.Labels{
+	counterMemoryMaxUsage.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "memory",
 	}).Set(float64(stats.MemoryStats.MaxUsage))
 
-	gaugeMemoryPercent.With(prometheus.Labels{
+	counterMemoryPercent.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "memory",
 	}).Set(float64(memPercent))
 
-	gaugeNetworkRxBytes.With(prometheus.Labels{
+	counterNetworkRxBytes.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.RxBytes))
 
-	gaugeNetworkRxPackets.With(prometheus.Labels{
+	counterNetworkRxPackets.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.RxPackets))
 
-	gaugeNetworkRxErrors.With(prometheus.Labels{
+	counterNetworkRxErrors.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.RxErrors))
 
-	gaugeNetworkRxDropped.With(prometheus.Labels{
+	counterNetworkRxDropped.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.RxDropped))
 
-	gaugeNetworkTxBytes.With(prometheus.Labels{
+	counterNetworkTxBytes.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.TxBytes))
 
-	gaugeNetworkTxPackets.With(prometheus.Labels{
+	counterNetworkTxPackets.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.TxPackets))
 
-	gaugeNetworkTxErrors.With(prometheus.Labels{
+	counterNetworkTxErrors.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.TxErrors))
 
-	gaugeNetworkTxDropped.With(prometheus.Labels{
+	counterNetworkTxDropped.With(prometheus.Labels{
 		"container": id,
 		"image":     image,
 		"type":      "network",
 	}).Set(float64(stats.NetworkStats.TxDropped))
+}
+
+func (h *EventHandler) resetStats(id, image string) error {
+	counterCpuTotalUsage.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "cpu",
+	}).Set(float64(0.0))
+
+	counterMemoryUsage.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "memory",
+	}).Set(float64(0.0))
+
+	counterMemoryMaxUsage.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "memory",
+	}).Set(float64(0.0))
+
+	counterMemoryPercent.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "memory",
+	}).Set(float64(0.0))
+
+	counterNetworkRxBytes.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkRxPackets.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkRxErrors.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkRxDropped.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkTxBytes.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkTxPackets.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkTxErrors.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	counterNetworkTxDropped.With(prometheus.Labels{
+		"container": id,
+		"image":     image,
+		"type":      "network",
+	}).Set(float64(0.0))
+
+	return nil
 }
